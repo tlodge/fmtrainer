@@ -1,5 +1,29 @@
 import { createSlice } from '@reduxjs/toolkit';
+import axios from 'axios';
 
+const sendit =  ()=>{
+  axios({
+    method:"post",
+    url : '/set_gesture',
+    data : {
+        hello: "world"
+    }
+  });
+}
+
+const record = (gesture)=>{
+  axios({
+   method:"get",
+   url : encodeURIComponent(`/record/${gesture}`),
+  });
+}
+
+const train = ()=>{
+ axios({
+   method:"get",
+   url : '/train',
+  });
+}
 
 const STATUSES = {
     "NOT_LISTENING" : "not listening",

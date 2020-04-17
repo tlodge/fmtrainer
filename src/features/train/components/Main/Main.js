@@ -86,8 +86,8 @@ recognition.lang = 'en-US'
 
   return (
     <>
-      <div style={{padding:100}}>
-        {amRecording && <img src="face.jpg"/>}
+      <div style={{padding:"0px 100px 100px 100px"}}>
+        {amRecording && <img width="600px" height="400px" src="/video_feed"/>}
         <div style={{fontSize:80, fontWeight:700, textTransform:"uppercase", marginBottom:30}}>{gesture}</div>
         {amListening && <div style={{color:"#736A6A"}} dangerouslySetInnerHTML={{__html:instructions}}/>}
         {!amListening && <button id='microphone-btn' className={styles.button} onClick={handleListen}>START LISTENING</button>}

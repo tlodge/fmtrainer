@@ -25,6 +25,13 @@ const train = ()=>{
   });
 }
 
+const done = ()=>{
+ axios({
+   method:"get",
+   url : '/done',
+  });
+}
+
 const STATUSES = {
     "NOT_LISTENING" : "not listening",
     "AWAITING_GESTURE" : "awaiting gesture",
@@ -48,7 +55,7 @@ const INSTRUCTIONS = {
   "THREE" : "recording in <strong>three</strong> seconds...",
   "TWO" : "recording in <strong>two</strong> seconds...",
   "ONE" : "recording in <strong>one</strong> second!",
-  "RECORDING" : `record gesture, say  <strong>ok</strong> when done, or  <strong>cancel</strong> to discard`, 
+  "RECORDING" : `record gesture, say <strong>ok</strong> or <strong>done</strong> when done, or <strong>cancel</strong> to discard`, 
 }
 
 export const trainSlice = createSlice({
@@ -133,10 +140,10 @@ export const handleGesture = (action) => (dispatch, getState) =>{
   
   dispatch(setRawTranscript(action.toLowerCase().trim()));
 
-
-  if ( action.toLowerCase().trim()==="ok"){
-    dispatch(reset());
-    return;
+  if (["done", "ok"].indexOf(action.toLowerCase().trim()) !== -1){
+     dispatch(reset());
+     done();
+     return;
   }
 
   if (action.toLowerCase().trim()==="cancel"){
@@ -147,7 +154,7 @@ export const handleGesture = (action) => (dispatch, getState) =>{
   if (state.status===STATUSES["AWAITING_CONFIRMATION"]){ 
     if (action.toLowerCase().trim()==="ready"){
       dispatch(setStatus("RECORDING_COUNTDOWN"));
-      dispatch(startCountdown());
+      dispatch(startCountdown(state));
       return;
     }
   }
@@ -158,9 +165,15 @@ export const startCountdown = (state, index=0) => dispatch =>{
 
     dispatch(setStatus(COUNTDOWN[index]));  
     
+    if (index==5){
+      console.log("calling record with ", state);
+      record(state.gesture);
+    }    
+  
     if (index<5){
       setTimeout(()=>startCountdown(state, ++index)(dispatch), 1000);
     }
 }
+
 
 export default trainSlice.reducer;

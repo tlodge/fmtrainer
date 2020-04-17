@@ -37,8 +37,7 @@ def gen(camera):
         with io.BytesIO() as output:
           image.save(output, format="PNG")
           if gesturetype is not None:
-            dirname = path.join("./tdata", gesturetype)
-            print("dirname is", dirname)
+            dirname = path.join("./data", gesturetype)
             try:
               mkdir(dirname)
             except OSError as err:
@@ -88,7 +87,7 @@ def train():
 def record(gesture):
    global gesturetype
    gesturetype = gesture
-   print("set gestture type to", gesturetype)
+   print("set gesture type to", gesturetype)
    return "success"
 
 @app.route('/set_gesture', methods=['POST'])

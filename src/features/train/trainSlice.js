@@ -41,14 +41,15 @@ const STATUSES = {
     "THREE" : "3",
     "TWO" : "2",
     "ONE" : "1",
-    "RECORDING": "recording"
+    "RECORDING": "recording",
+    "TRAINING":"training"
 }
 
 const COUNTDOWN = ["FIVE", "FOUR", "THREE", "TWO", "ONE", "RECORDING"];
 
 const INSTRUCTIONS = {
   "NOT_LISTENING"         : "press button to start listening for instructions",
-  "AWAITING_GESTURE"      : `say <strong>train</strong> followed by the <strong><i>name of the gesture</i></strong> you'd like to train`,
+  "AWAITING_GESTURE"      : `say <strong>record</strong> followed by the <strong><i>name of the gesture</i></strong> you'd like to train`,
   "AWAITING_CONFIRMATION" : `say <strong>ready</strong> to start recording a gesture with this name or <strong>cancel</strong> to restate gesture`,
   "FIVE" : "recording in <strong>five</strong> seconds...",
   "FOUR" : "recording in <strong>four</strong> seconds...",
@@ -56,6 +57,7 @@ const INSTRUCTIONS = {
   "TWO" : "recording in <strong>two</strong> seconds...",
   "ONE" : "recording in <strong>one</strong> second!",
   "RECORDING" : `record gesture, say <strong>ok</strong> or <strong>done</strong> when done, or <strong>cancel</strong> to discard`, 
+  "TRAINING" : `now training...this will take a while...`,
 }
 
 export const trainSlice = createSlice({
@@ -110,10 +112,10 @@ export const trainSlice = createSlice({
         return;
       }
 
-      const index = action.payload.toLowerCase().indexOf("train");
+      const index = action.payload.toLowerCase().indexOf("record");
       
       if (index !== -1){
-        state.gesture  = `${action.payload.substring(index+5).trim()}`;
+        state.gesture  = `${action.payload.substring(index+6).trim()}`;
         state.status=  STATUSES["AWAITING_CONFIRMATION"]
         state.instructions =  INSTRUCTIONS["AWAITING_CONFIRMATION"]
       }//else{
@@ -139,6 +141,13 @@ export const handleGesture = (action) => (dispatch, getState) =>{
   const state = getState().train;
   
   dispatch(setRawTranscript(action.toLowerCase().trim()));
+
+  if (action.toLowerCase().trim()==="train"){
+    dispatch(reset());
+    dispatch(setStatus("TRAINING"));
+    train();
+    return;
+  }
 
   if (["done", "ok"].indexOf(action.toLowerCase().trim()) !== -1){
      dispatch(reset());

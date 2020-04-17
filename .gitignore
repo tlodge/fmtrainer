@@ -10,7 +10,9 @@
 
 # production
 /build
-
+/data
+/api/data
+/api/test
 # misc
 .DS_Store
 .env.local

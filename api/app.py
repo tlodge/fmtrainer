@@ -13,9 +13,11 @@ from flask import Flask, render_template, Response, request, jsonify
 
 # Raspberry Pi camera module (requires picamera package)
 from camera import Camera
+from train import Trainer
 from PIL import Image
 clients=0
 camera = Camera(training_mode=False)
+trainer = Trainer()
 mygenerator = None
 gesturetype = None
 readyForImage = True
@@ -79,8 +81,10 @@ def video_feed():
 
 @app.route('/train')
 def train():
-  global readyForImage
+  global readyForImage, gesturetype, trainer
   readyForImage = False
+  gesturetype = None
+  trainer.train()
   return "success"
 
 @app.route('/record/<gesture>', methods=['GET'])

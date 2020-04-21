@@ -136,6 +136,14 @@ export const getInstructions = state => state.train.instructions;
 export const getListening = state => state.train.amListening;
 export const getRawTranscript = state => state.train.rawTranscript;
 
+export const handleImage = (action) => (dispatch, getState)=>{
+  axios({
+    method:"post",
+    url : '/image',
+    data : {image:action}
+  });
+}
+
 export const handleGesture = (action) => (dispatch, getState) =>{
 
   const state = getState().train;

@@ -17,10 +17,17 @@ from flask import Flask, render_template, Response, request, jsonify
 # Raspberry Pi camera module (requires picamera package)
 #from camera import Camera
 from train import Trainer
+from classifier import Classifier
 from PIL import Image
+import numpy as np
+
 clients=0
+
+
 ##camera = Camera(training_mode=False)
 trainer = Trainer()
+category = Classifier()
+
 mygenerator = None
 gesturetype = None
 readyForImage = True
@@ -108,7 +115,8 @@ def record(gesture):
    gesturetype = gesture
    return "success"
 
-@app.route('/image', methods=['POST'])
+
+@app.route('/image_original', methods=['POST'])
 def image():
   global imageIndexes
  
@@ -139,6 +147,20 @@ def image():
 @app.route('/set_gesture', methods=['POST'])
 def set_gesture():
    return jsonify(request.json)
-    
+
+@app.route('/image', methods=['POST'])
+def classify():
+  global category
+  img_data = request.json['image'].replace("data:image/png;base64,", "").encode()
+  buf = io.BytesIO(base64.decodebytes(img_data))
+  img = Image.open(buf).convert('RGB')
+  print (np.array(img))
+  #category.classify(img)
+  return jsonify(request.json)
+
+
+  #img_data = request.json['image'].replace("data:image/png;base64,", "").encode()
+  #category.classify()
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)

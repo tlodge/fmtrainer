@@ -25,14 +25,16 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Activation, Dropout, Flatten, Dense
 from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 
-class Trainer:
 
-  def __init__(self):
-    print("inited")
 
-  def train(self):
-    train_data_dir = "data" 
-    val_data_dir = "trained"
+def main():
+    if len(argv) != 3 or argv[1] == '--help':
+        print("""Usage: train.py TRAIN_DIR VAL_DIR...
+Save TRAIN_DIR/model.h5 after training a conv net to distinguish between images in its subdirs.""")
+        exit(1)
+
+    train_data_dir = argv[1]
+    val_data_dir = argv[2]
     nb_train_samples = len(glob('%s/*/*.png' % train_data_dir))
     nb_classes = len(glob('%s/*/' % train_data_dir))
     batch_size = 100
@@ -91,3 +93,5 @@ class Trainer:
                    EarlyStopping(patience=10),
                    ReduceLROnPlateau(factor=0.2, patience=5, verbose=1)])
 
+if __name__ == '__main__':
+    main()

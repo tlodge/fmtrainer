@@ -42,7 +42,8 @@ const STATUSES = {
     "TWO" : "2",
     "ONE" : "1",
     "RECORDING": "recording",
-    "TRAINING":"training"
+    "TRAINING":"training",
+    "TESTING":"testing",
 }
 
 const COUNTDOWN = ["FIVE", "FOUR", "THREE", "TWO", "ONE", "RECORDING"];
@@ -58,6 +59,7 @@ const INSTRUCTIONS = {
   "ONE" : "recording in <strong>one</strong> second!",
   "RECORDING" : `record gesture, say <strong>ok</strong> or <strong>done</strong> when done, or <strong>cancel</strong> to discard`, 
   "TRAINING" : `now training...this will take a while...`,
+  "TESTING" : `now testing what we have learnt!`,
 }
 
 export const trainSlice = createSlice({
@@ -69,6 +71,7 @@ export const trainSlice = createSlice({
     instructions: INSTRUCTIONS["NOT_LISTENING"],
     gesture: "",
     rawTranscript: "",
+    preview:false,
   },
   
   reducers: {
@@ -76,6 +79,10 @@ export const trainSlice = createSlice({
     setStatus: (state, action)=>{
       state.status = STATUSES[action.payload];
       state.instructions = INSTRUCTIONS[action.payload];
+    },
+
+    setPreview: (state, action)=>{
+      state.preview=action.payload;
     },
 
     setRawTranscript: (state, action)=>{
@@ -86,6 +93,7 @@ export const trainSlice = createSlice({
       state.status       = STATUSES["AWAITING_GESTURE"]
       state.instructions =  INSTRUCTIONS["AWAITING_GESTURE"] 
       state.gesture = ""
+      state.preview = false;
     },
 
     startedListening: (state, action)=>{
@@ -125,7 +133,7 @@ export const trainSlice = createSlice({
   },
 });
 
-export const {setGesture, setStatus, startedListening, amListening, reset, setRawTranscript } = trainSlice.actions;
+export const {setGesture, setStatus, startedListening, amListening, reset, setRawTranscript, setPreview} = trainSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of
@@ -135,13 +143,25 @@ export const getStatus =  state => state.train.status;
 export const getInstructions = state => state.train.instructions;
 export const getListening = state => state.train.amListening;
 export const getRawTranscript = state => state.train.rawTranscript;
+export const showPreview = state=>state.train.preview;
 
 export const handleImage = (action) => (dispatch, getState)=>{
-  axios({
-    method:"post",
-    url : '/image',
-    data : {image:action}
-  });
+  const state = getState().train;
+  
+  if (state.status === STATUSES["RECORDING"]){
+    axios({
+      method:"post",
+      url : '/image',
+      data : {image:action}
+    });
+  }
+  if (state.status === STATUSES["TESTING"]){
+    axios({
+      method:"post",
+      url : '/classify',
+      data : {image:action}
+    });
+  }
 }
 
 export const handleGesture = (action) => (dispatch, getState) =>{
@@ -150,6 +170,12 @@ export const handleGesture = (action) => (dispatch, getState) =>{
   
   dispatch(setRawTranscript(action.toLowerCase().trim()));
 
+  if (action.toLowerCase().trim()==="test"){
+    dispatch(setStatus("TESTING"));
+    dispatch(setPreview(true));
+    return;
+  }
+  
   if (action.toLowerCase().trim()==="train"){
     dispatch(reset());
     dispatch(setStatus("TRAINING"));
@@ -184,10 +210,12 @@ export const startCountdown = (state, index=0) => dispatch =>{
     
     if (index==5){
       console.log("calling record with ", state);
+      dispatch(setPreview(false))
       record(state.gesture);
     }    
   
     if (index<5){
+      dispatch(setPreview(true))
       setTimeout(()=>startCountdown(state, ++index)(dispatch), 1000);
     }
 }

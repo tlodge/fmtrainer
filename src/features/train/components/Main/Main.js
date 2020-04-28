@@ -6,6 +6,7 @@ import {
     getStatus,
     getRawTranscript,
     getInstructions,
+    showPreview,
     handleGesture,
     handleImage,
     startedListening,
@@ -39,6 +40,7 @@ recognition.lang = 'en-US'
   const amListening = useSelector(getListening);
   const rawTranscript = useSelector(getRawTranscript);
   const amRecording = useSelector(getStatus) === "recording";
+  const preview = useSelector(showPreview);
 
   const dispatch = useDispatch();
   let finalTranscript = '', interimTranscript='';
@@ -77,6 +79,7 @@ recognition.lang = 'en-US'
       
       if (!amListening) {
         dispatch(startedListening(true));
+        streamPhotos(canvasRef.current, videoRef.current);
         console.log("OK STARTING LISTENING!");
         recognition.start();
       } 
@@ -86,9 +89,8 @@ recognition.lang = 'en-US'
   const [video, isCameraInitialised, running, setPlaying, error] = useCamera(videoRef);
 
   const renderCamera = ()=>{
-
     return <><video
-    style={{display: amRecording ? "block" : "none"}}
+    style={{display: (amRecording || preview) ? "block" : "none"}}
     ref={videoRef}
     autoPlay={true}
     muted={true}
@@ -106,13 +108,8 @@ recognition.lang = 'en-US'
         context.drawImage(video, 0, 0, 128, 128);
         dispatch(handleImage(canvas.toDataURL('image/png')));
         
-      },500);
+      },200);
   }
-
-  const takePicture = ()=>{
-    streamPhotos(canvasRef.current, videoRef.current);
-  }
-  
 
   return (
     <>
@@ -121,7 +118,6 @@ recognition.lang = 'en-US'
         <div style={{fontSize:80, fontWeight:700, textTransform:"uppercase", marginBottom:30}}>{gesture}</div>
         {amListening && <div style={{color:"#736A6A"}} dangerouslySetInnerHTML={{__html:instructions}}/>}
         {!amListening && <button id='microphone-btn' className={styles.button} onClick={handleListen}>START LISTENING</button>}
-        <button onClick={takePicture}>TAKE PICTURE</button>
     </div>
      {rawTranscript.trim()!="" && <div className={styles.footer}>{`"${rawTranscript}"`}</div>}
      </>

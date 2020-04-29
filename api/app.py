@@ -10,6 +10,7 @@ import errno
 import time
 import re
 from select import select
+import itertools
 
 try:
    from StringIO import StringIO
@@ -107,53 +108,109 @@ def done():
 
 #    return Response(mygenerator, mimetype='multipart/x-mixed-replace; boundary=frame')
 
+#for i, c in enumerate(itertools.cycle('\|/-')):
+#                yield "data: %s %d\n\n" % (c, i)
+#                time.sleep(.1)  # an artificial delay
 
 @app.route('/trains')
 def trains():
-    def inner():
-        proc = subprocess.Popen(
-                ['python3 train.py data val_data'],
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-                )
-        # pass data until client disconnects, then terminate
-        # see https://stackoverflow.com/questions/18511119/stop-processing-flask-route-if-request-aborted
-        try:
-            awaiting = [proc.stdout, proc.stderr]
-            while awaiting:
-                # wait for output on one or more pipes, or for proc to close a pipe
-                ready, _, _ = select(awaiting, [], [])
-                for pipe in ready:
-                    line = pipe.readline()
-                    if line:
-                        # some output to report
-                        #print ("sending line:", line.replace('\n', '\\n'))
-                        #print(line.replace('\n', '\n'))
-                        yield line.rstrip()
-                        # + '<br/>\n'
-                    else:
-                        # EOF, pipe was closed by proc
-                        awaiting.remove(pipe)
-            if proc.poll() is None:
-                print("process closed stdout and stderr but didn't terminate; terminating now.")
-                proc.terminate()
+    if request.headers.get('accept') == 'text/event-stream':
+        def events():
+          proc = subprocess.Popen(
+                  ['python3 train.py data val_data'],
+                  shell=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.PIPE
+                  )
+          # pass data until client disconnects, then terminate
+          # see https://stackoverflow.com/questions/18511119/stop-processing-flask-route-if-request-aborted
+          try:
+              awaiting = [proc.stdout, proc.stderr]
+              while awaiting:
+                  # wait for output on one or more pipes, or for proc to close a pipe
+                  ready, _, _ = select(awaiting, [], [])
+                  for pipe in ready:
+                      line = pipe.readline()
+                      if line:
+                          print(line.rstrip())
+                          yield "data: %s \n\n" % line.rstrip().decode('UTF-8')
+                      else:
+                          # EOF, pipe was closed by proc
+                          print("AM FINISHED!!")
+                          yield "data: COMPLETE"
+                          awaiting.remove(pipe)
+              if proc.poll() is None:
+                  print("process closed stdout and stderr but didn't terminate; terminating now.")
+                  proc.terminate()
 
-        except GeneratorExit:
+          except GeneratorExit:
             # occurs when new output is yielded to a disconnected client
             print('client disconnected, killing process')
             proc.terminate()
 
-        # wait for proc to finish and get return code
-        ret_code = proc.wait()
-        print("process return code:", ret_code)
-    try:
-      subprocess.call(['rm', '-rf', 'val_data'])
-    except:
-      print("no val_data to remove")
+          # wait for proc to finish and get return code
+          ret_code = proc.wait()
+          print("process return code:", ret_code)
+        return Response(events(), content_type='text/event-stream')
 
-    subprocess.call(['python3', 'validate_split.py', 'data'])
-    return Response(inner(), mimetype='text/html')
+    return "nope"
+
+
+@app.route('/trainsbroken')
+def trains_broken():
+    print ("trains has been called!")
+    if request.headers.get('accept') == 'text/event-stream':
+      
+      try:
+        subprocess.call(['rm', '-rf', 'val_data'])
+      except:
+        print("no val_data to remove")
+
+      subprocess.call(['python3', 'validate_split.py', 'data'])
+
+      def inner():
+          proc = subprocess.Popen(
+                  ['python3 train.py data val_data'],
+                  shell=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.PIPE
+                  )
+          # pass data until client disconnects, then terminate
+          # see https://stackoverflow.com/questions/18511119/stop-processing-flask-route-if-request-aborted
+          try:
+              awaiting = [proc.stdout, proc.stderr]
+              while awaiting:
+                  # wait for output on one or more pipes, or for proc to close a pipe
+                  ready, _, _ = select(awaiting, [], [])
+                  for pipe in ready:
+                      line = pipe.readline()
+                      if line:
+                          # some output to report
+                          #print ("sending line:", line.replace('\n', '\\n'))
+                          #print(line.replace('\n', '\n'))
+                          print(line.rstrip())
+                          yield line.rstrip()
+                          # + '<br/>\n'
+                      else:
+                          # EOF, pipe was closed by proc
+                          awaiting.remove(pipe)
+              if proc.poll() is None:
+                  print("process closed stdout and stderr but didn't terminate; terminating now.")
+                  proc.terminate()
+
+          except GeneratorExit:
+              # occurs when new output is yielded to a disconnected client
+              print('client disconnected, killing process')
+              proc.terminate()
+
+          # wait for proc to finish and get return code
+          ret_code = proc.wait()
+          print("process return code:", ret_code)
+      
+      #return Response(inner(), mimetype='text/html')
+      print("sending response event stream!")
+      return Response(inner(), content_type='text/event-stream')
+    return "nope"
 
 @app.route('/train')
 def train():

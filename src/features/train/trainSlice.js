@@ -18,11 +18,30 @@ const record = (gesture)=>{
   });
 }
 
-const train = ()=>{
- axios({
+const train = (amdone)=>{
+  
+  const source = new EventSource('/trains');
+
+  source.onopen = ()=>{
+    console.log("connection successfully opened!!");
+  }
+  source.onerror = (err)=>{
+    console.log("error connecting", err);
+    source.close();
+  }
+  source.onmessage = function(e) {
+    console.log(e.data);
+    if (e.data.indexOf("StreamExecutor") !== -1 || e.data.indexOf("COMPLETE") !==-1){
+      console.log("FINISHED TRAINING")
+      amdone();
+      source.close();
+    }
+  }
+
+ /*axios({
    method:"get",
    url : '/train',
-  });
+  });*/
 }
 
 const done = ()=>{
@@ -177,10 +196,18 @@ export const handleGesture = (action) => (dispatch, getState) =>{
   }
   
   if (action.toLowerCase().trim()==="train"){
-    dispatch(reset());
-    dispatch(setStatus("TRAINING"));
-    train();
-    return;
+    console.log("ok heard train!");
+    if (state.status != STATUSES["TRAINING"]){
+      console.log("not already training so will start training!")
+      dispatch(reset());
+      dispatch(setStatus("TRAINING"));
+      train(()=>{
+        dispatch(reset())
+      });
+      return;
+    }else{
+      console.log("already training so not doing anything..")
+    }
   }
 
   if (["done", "ok"].indexOf(action.toLowerCase().trim()) !== -1){

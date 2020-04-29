@@ -18,7 +18,7 @@ const record = (gesture)=>{
   });
 }
 
-const train = (amdone)=>{
+const train = (ondata, amdone)=>{
   
   const source = new EventSource('/trains');
 
@@ -30,11 +30,12 @@ const train = (amdone)=>{
     source.close();
   }
   source.onmessage = function(e) {
-    console.log(e.data);
     if (e.data.indexOf("StreamExecutor") !== -1 || e.data.indexOf("COMPLETE") !==-1){
       console.log("FINISHED TRAINING")
       amdone();
       source.close();
+    }else{
+      ondata(e.data);
     }
   }
 
@@ -95,6 +96,10 @@ export const trainSlice = createSlice({
   
   reducers: {
 
+    setInstructions: (state, action)=>{
+      state.instructions = action.payload;
+    },
+
     setStatus: (state, action)=>{
       state.status = STATUSES[action.payload];
       state.instructions = INSTRUCTIONS[action.payload];
@@ -152,7 +157,7 @@ export const trainSlice = createSlice({
   },
 });
 
-export const {setGesture, setStatus, startedListening, amListening, reset, setRawTranscript, setPreview} = trainSlice.actions;
+export const {setGesture, setStatus, startedListening, amListening, reset, setRawTranscript, setPreview, setInstructions} = trainSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of
@@ -201,7 +206,7 @@ export const handleGesture = (action) => (dispatch, getState) =>{
       console.log("not already training so will start training!")
       dispatch(reset());
       dispatch(setStatus("TRAINING"));
-      train(()=>{
+      train((data)=>{dispatch(setInstructions(data))}, ()=>{
         dispatch(reset())
       });
       return;

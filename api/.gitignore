@@ -19,6 +19,7 @@ parts/
 sdist/
 var/
 data/
+day1/
 test/
 *.egg-info/
 .installed.cfg

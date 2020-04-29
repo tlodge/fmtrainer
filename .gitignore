@@ -11,6 +11,7 @@
 # production
 /build
 /data
+/val_data
 /api/data
 /api/test
 # misc

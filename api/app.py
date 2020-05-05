@@ -30,6 +30,7 @@ clients=0
 
 
 ##camera = Camera(training_mode=False)
+REVIEW_DIRECTORY = "./static/media/review"
 
 alreadyRecordedSomething = False
 markImagesForReview = False
@@ -54,7 +55,7 @@ except:
   dataIndex = 0  
 
 try:
-  markfiles = glob('./review/image[0-9]*.png')
+  markfiles = glob('%s/image[0-9]*.png' % REVIEW_DIRECTORY)
   markIndex= len(markfiles)
 except:
   markIndex = 0 
@@ -63,7 +64,7 @@ except:
 print("gestureDict", gestureDict)
 print("dataIndex", dataIndex)
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='')
 
 
 def _keyfor(s):
@@ -289,6 +290,13 @@ def image():
 def set_gesture():
    return jsonify(request.json)
 
+
+@app.route('/marked')
+def marked():
+  images = [i.replace("./static", "") for i in glob('./static/media/review/*.png')]
+  print(jsonify(images))
+  return jsonify(images)
+
 @app.route('/mark')
 def mark():
   global markImagesForReview
@@ -308,7 +316,7 @@ def classify():
   img_data = request.json['image'].replace("data:image/png;base64,", "").encode()
   
   if markImagesForReview is True:
-    filename = "./review/image%s.png" % int(markIndex)
+    filename = "%s/image%s.png" % (REVIEW_DIRECTORY, int(markIndex))
     markIndex = markIndex + 1
     with open(filename, "wb") as fh:
       fh.write(base64.decodebytes(img_data))
@@ -318,5 +326,5 @@ def classify():
   return jsonify({"category": category.classify(img)})
 
 if __name__ == '__main__':
-    system('mkdir -p "review"')
+    system('mkdir -p %s' % REVIEW_DIRECTORY)
     app.run(host='0.0.0.0', threaded=False)

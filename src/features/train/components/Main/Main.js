@@ -1,15 +1,19 @@
 import React, { useState, useRef, useEffect, createRef, useImperativeHandle } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import cn from 'classNames';
+
 import {
     getListening,
+    getMarked,
     getGesture,
     getStatus,
     getRawTranscript,
+    getClassification,
     getInstructions,
     showPreview,
     handleGesture,
     handleImage,
-    startedListening,
+    startedListening
 } from '../../trainSlice';
 
 import { useCamera } from './useCamera';
@@ -38,9 +42,11 @@ recognition.lang = 'en-US'
   const gesture = useSelector(getGesture);
   const instructions = useSelector(getInstructions);
   const amListening = useSelector(getListening);
+  const amMarked = useSelector(getMarked);
   const rawTranscript = useSelector(getRawTranscript);
   const amRecording = useSelector(getStatus) === "recording";
   const preview = useSelector(showPreview);
+  const classification = useSelector(getClassification);
 
   const dispatch = useDispatch();
   let finalTranscript = '', interimTranscript='';
@@ -90,14 +96,18 @@ recognition.lang = 'en-US'
 
   const renderCamera = ()=>{
     return <><video
+    className={cn({[styles.vcontainer]:amMarked})}
     style={{display: (amRecording || preview) ? "block" : "none"}}
     ref={videoRef}
     autoPlay={true}
     muted={true}
     controls
-    width={600}
+    width="auto"
     height={400}/>
-    <canvas style={{display:"none"}}ref={canvasRef} width={128} height={128}/></>
+    <canvas style={{display:"none"}}ref={canvasRef} width={128} height={128}/>
+    {preview && classification.trim()!="unknown" && <div className={styles.classification}>{classification}</div>}
+    </>
+    
   }
   
  
@@ -108,7 +118,7 @@ recognition.lang = 'en-US'
         context.drawImage(video, 0, 0, 128, 128);
         dispatch(handleImage(canvas.toDataURL('image/png')));
         
-      },200);
+      },1000);
   }
 
   return (

@@ -52,6 +52,22 @@ const done = ()=>{
   });
 }
 
+const mark = ()=>{
+  console.log("calling mark!")
+  axios({
+    method:"get",
+    url : '/mark',
+   });
+ }
+
+ const endmark = ()=>{
+  console.log("calling END mark!")
+  axios({
+    method:"get",
+    url : '/endmark',
+   });
+ }
+
 const STATUSES = {
     "NOT_LISTENING" : "not listening",
     "AWAITING_GESTURE" : "awaiting gesture",
@@ -87,11 +103,13 @@ export const trainSlice = createSlice({
 
   initialState: {
     amListening: false,
+    marked: false,
     status: STATUSES["NOT_LISTENING"],
     instructions: INSTRUCTIONS["NOT_LISTENING"],
     gesture: "",
     rawTranscript: "",
     preview:false,
+    classification:"unknown"
   },
   
   reducers: {
@@ -109,10 +127,16 @@ export const trainSlice = createSlice({
       state.preview=action.payload;
     },
 
+    setMarked: (state, action)=>{
+      state.marked=action.payload;
+    },
+
     setRawTranscript: (state, action)=>{
       state.rawTranscript = action.payload;
     },
-
+    setClassification: (state, action)=>{
+      state.classification = action.payload;
+    },
     reset: (state, action)=>{
       state.status       = STATUSES["AWAITING_GESTURE"]
       state.instructions =  INSTRUCTIONS["AWAITING_GESTURE"] 
@@ -157,7 +181,7 @@ export const trainSlice = createSlice({
   },
 });
 
-export const {setGesture, setStatus, startedListening, amListening, reset, setRawTranscript, setPreview, setInstructions} = trainSlice.actions;
+export const {setGesture, setStatus, startedListening, amListening, reset, setRawTranscript, setPreview, setInstructions, setClassification, setMarked} = trainSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of
@@ -166,8 +190,10 @@ export const getGesture = state => state.train.gesture;
 export const getStatus =  state => state.train.status;
 export const getInstructions = state => state.train.instructions;
 export const getListening = state => state.train.amListening;
+export const getMarked = state=>state.train.marked;
 export const getRawTranscript = state => state.train.rawTranscript;
 export const showPreview = state=>state.train.preview;
+export const getClassification = state=>state.train.classification;
 
 export const handleImage = (action) => (dispatch, getState)=>{
   const state = getState().train;
@@ -184,7 +210,11 @@ export const handleImage = (action) => (dispatch, getState)=>{
       method:"post",
       url : '/classify',
       data : {image:action}
-    });
+    }).then((response)=>{
+      console.log("setting classidficaton", response.data)
+      const {category="unknown"} = response.data;
+      dispatch(setClassification(category));
+    })
   }
 }
 
@@ -199,19 +229,27 @@ export const handleGesture = (action) => (dispatch, getState) =>{
     dispatch(setPreview(true));
     return;
   }
+
+  if (action.toLowerCase().trim()==="mark"){
+      console.log("marking");
+      dispatch(setMarked(true));
+      mark();
+  }
+
+  if (action.toLowerCase().trim()==="end"){
+      console.log("end mark");
+      dispatch(setMarked(false));
+      endmark();
+  }
   
   if (action.toLowerCase().trim()==="train"){
-    console.log("ok heard train!");
     if (state.status != STATUSES["TRAINING"]){
-      console.log("not already training so will start training!")
       dispatch(reset());
       dispatch(setStatus("TRAINING"));
       train((data)=>{dispatch(setInstructions(data))}, ()=>{
         dispatch(reset())
       });
       return;
-    }else{
-      console.log("already training so not doing anything..")
     }
   }
 

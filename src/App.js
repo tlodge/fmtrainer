@@ -18,7 +18,7 @@ function App() {
         
               <Link to="/review">Review</Link>
             
-        <div className="App-content">
+        
         {/* A <Switch> looks through its children <Route>s and
             renders the first one that matches the current URL. */}
         <Switch>
@@ -30,7 +30,7 @@ function App() {
           </Route>
         </Switch>
       </div>
-      </div>
+      
     </Router>
   )
 }

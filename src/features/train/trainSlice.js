@@ -80,6 +80,7 @@ const STATUSES = {
     "RECORDING": "recording",
     "TRAINING":"training",
     "TESTING":"testing",
+    "CALIBRATING":"calibrating"
 }
 
 const COUNTDOWN = ["FIVE", "FOUR", "THREE", "TWO", "ONE", "RECORDING"];
@@ -96,6 +97,7 @@ const INSTRUCTIONS = {
   "RECORDING" : `record gesture, say <strong>ok</strong> or <strong>done</strong> when done, or <strong>cancel</strong> to discard`, 
   "TRAINING" : `now training...this will take a while...`,
   "TESTING" : `now testing what we have learnt!`,
+  "CALIBRATING": `line up camera with markers`,
 }
 
 export const trainSlice = createSlice({
@@ -211,7 +213,6 @@ export const handleImage = (action) => (dispatch, getState)=>{
       url : '/classify',
       data : {image:action}
     }).then((response)=>{
-      console.log("setting classidficaton", response.data)
       const {category="unknown"} = response.data;
       dispatch(setClassification(category));
     })
@@ -242,6 +243,12 @@ export const handleGesture = (action) => (dispatch, getState) =>{
       endmark();
   }
   
+  if (action.toLowerCase().trim()==="calibrate"){
+    console.log("seen a calibrate!!");
+    dispatch(reset());
+    dispatch(setStatus("CALIBRATING"));
+  }
+
   if (action.toLowerCase().trim()==="train"){
     if (state.status != STATUSES["TRAINING"]){
       dispatch(reset());

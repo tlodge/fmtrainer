@@ -4,7 +4,7 @@ import subprocess
 import base64
 import json
 import os
-from os import path, makedirs, system
+from os import path, makedirs, system, rename
 import io
 import errno
 import time
@@ -64,7 +64,7 @@ except:
 print("gestureDict", gestureDict)
 print("dataIndex", dataIndex)
 
-app = Flask(__name__, static_url_path='')
+app = Flask(__name__, static_url_path='/static')
 
 
 def _keyfor(s):
@@ -142,7 +142,18 @@ def merge():
   if len(directories)==0 :
     return directories[0]
 
+  marked = glob('./marked/')
+
+  if len(marked) > 0:
+    directories.append("./marked")
+  
   output = 'combined'
+  
+  try:
+    subprocess.call(['rm', '-rf', 'combined'])
+  except:
+    print("no combined to remove")
+
   system('mkdir -p "%s"' % output)
   total = 0
  
@@ -291,11 +302,33 @@ def set_gesture():
    return jsonify(request.json)
 
 
+
+@app.route('/label', methods=['POST'])
+def label():
+  global gestureDict
+  images = request.json['images']
+  category = request.json['category']
+  print ("moving following", images)
+  print ("to category %d" % int(category))
+  print (gestureDict)
+
+  movedir = "marked/%s" % int(category)
+  system('mkdir -p %s' % movedir)
+  [rename(".%s" % image, "%s/%s" % (movedir,os.path.basename(image))) for image in images]
+  return jsonify(request.json)
+
 @app.route('/marked')
 def marked():
-  images = [i.replace("./static", "") for i in glob('./static/media/review/*.png')]
-  print(jsonify(images))
-  return jsonify(images)
+  images = [i.replace("./static", "/static") for i in glob('./static/media/review/*.png')]
+  imglen = len(images)
+  #images =  glob('./static/media/review/*.png')
+  result = {
+    "images" : images[:30], 
+    "total": imglen,
+    "categories" : gestureDict, 
+  }
+  print(jsonify(result))
+  return jsonify(result)
 
 @app.route('/mark')
 def mark():

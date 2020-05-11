@@ -68,7 +68,7 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "build": "node scripts/build.js && rm -rf ./api/static && mv build/* ./api/templates && mv ./api/templates/static ./api/",
+    "build": "node scripts/build.js && rm -rf ./api/static/css ./api/static/js && cp -R build/* ./api/templates && cp -R ./api/templates/static ./api/",
     "test": "node scripts/test.js",
     "serve": "cd api && python3 app.py"
   },

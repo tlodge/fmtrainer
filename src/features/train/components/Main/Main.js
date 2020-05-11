@@ -45,6 +45,7 @@ recognition.lang = 'en-US'
   const amMarked = useSelector(getMarked);
   const rawTranscript = useSelector(getRawTranscript);
   const amRecording = useSelector(getStatus) === "recording";
+  const calibrate = useSelector(getStatus) === "calibrating";
   const preview = useSelector(showPreview);
   const classification = useSelector(getClassification);
 
@@ -97,7 +98,7 @@ recognition.lang = 'en-US'
   const renderCamera = ()=>{
     return <><video
     className={cn({[styles.vcontainer]:amMarked})}
-    style={{display: (amRecording || preview) ? "block" : "none"}}
+    style={{display: (amRecording || preview || calibrate) ? "block" : "none"}}
     ref={videoRef}
     autoPlay={true}
     muted={true}
@@ -106,6 +107,7 @@ recognition.lang = 'en-US'
     height={400}/>
     <canvas style={{display:"none"}}ref={canvasRef} width={128} height={128}/>
     {preview && classification.trim()!="unknown" && <div className={styles.classification}>{classification}</div>}
+    {calibrate && <img className={styles.grid} src="./static/media/grid1.svg" width="550px" height="400px"/>}
     </>
     
   }
@@ -122,7 +124,7 @@ recognition.lang = 'en-US'
   }
 
   return (
-    <>
+    <div className="App-content">
       <div style={{padding:"0px 100px 100px 100px"}}>
         {renderCamera()}
         <div style={{fontSize:80, fontWeight:700, textTransform:"uppercase", marginBottom:30}}>{gesture}</div>
@@ -130,6 +132,6 @@ recognition.lang = 'en-US'
         {!amListening && <button id='microphone-btn' className={styles.button} onClick={handleListen}>START LISTENING</button>}
     </div>
      {rawTranscript.trim()!="" && <div className={styles.footer}>{`"${rawTranscript}"`}</div>}
-     </>
+     </div>
   );
 }

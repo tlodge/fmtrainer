@@ -35,7 +35,7 @@ class Classifier:
     selected = np.argmax(self.smoothed) # The selected class is the one with highest probability
     summary = 'Class %d [%s]' % (selected, ' '.join('%02.0f%%' % (99 * p) for p in self.smoothed))
    
-    if (self.smoothed.max()):
+    if (self.smoothed.max() >= 0.8):
        print("%d %s %s" % (selected, self.categories[selected], self.categories[self.smoothed.argmax()].replace("_", " ")))
        return "%s (%02.0f%%)" % (self.categories[self.smoothed.argmax()].replace("_", " "), 99*self.smoothed.max())
     return "unknown"

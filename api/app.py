@@ -12,6 +12,9 @@ import re
 from select import select
 import itertools
 from glob import glob
+import random
+import string
+
 
 
 try:
@@ -66,6 +69,9 @@ print("dataIndex", dataIndex)
 
 app = Flask(__name__, static_url_path='/static')
 
+def _randomString(stringLength=8):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(stringLength))
 
 def _keyfor(s):
 
@@ -314,7 +320,7 @@ def label():
 
   movedir = "marked/%s" % int(category)
   system('mkdir -p %s' % movedir)
-  [rename(".%s" % image, "%s/%s" % (movedir,os.path.basename(image))) for image in images]
+  [rename(".%s" % image, "%s/%s_%s" % (movedir,_randomString(6),os.path.basename(image))) for image in images]
   return jsonify(request.json)
 
 @app.route('/marked')

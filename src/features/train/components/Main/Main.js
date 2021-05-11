@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, createRef, useImperativeHandle } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import cn from 'classNames';
+import cn from 'classnames';
 
 import {
     getListening,

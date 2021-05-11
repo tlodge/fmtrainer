@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, createRef, useImperativeHandle } fr
 import { useSelector, useDispatch } from 'react-redux';
 import {fetchImages, getImages, getTotal, getCategories, labelImages} from '../../reviewSlice';
 import {reset} from '../../../train/trainSlice';
-import cn from 'classNames';
+import cn from 'classnames';
 import styles from '../../Review.module.css';
 
 
